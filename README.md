@@ -31,7 +31,7 @@ Since `node-oracledb` requires some prerequisites before installing, you must
 prepare you machine as its
 [documentation](https://github.com/oracle/node-oracledb/blob/master/INSTALL.md)
 says. You could try to install it before installing `modelar-oracle-adpater`, 
-that guarantees succeeding installation.
+that guarantees successful installation.
 
 Oracle database transfers identifiers to UPPER-CASE by default, but with this 
 adapter, they will keep the form of which they're defined.
