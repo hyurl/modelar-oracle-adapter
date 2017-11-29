@@ -1,5 +1,5 @@
 const oracledb = require("oracledb");
-const Adapter = require("modelar").Adapter;
+const { Adapter } = require("modelar");
 const Pools = {};
 
 class OracleAdapter extends Adapter {
@@ -129,7 +129,7 @@ class OracleAdapter extends Adapter {
             this.connection.close();
     }
 
-    static close() {
+    closeAll() {
         for (let i in Pools) {
             Pools[i].close();
             delete Pools[i];
