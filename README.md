@@ -1,4 +1,4 @@
-# Modelar-Postgres-Adapter
+# Modelar-Oracle-Adapter
 
 **This is an adapter for [Modelar](http://modelar.hyurl.com) to connect**
 **SQLite database.**
