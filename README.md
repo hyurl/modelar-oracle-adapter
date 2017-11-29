@@ -1,12 +1,12 @@
 # Modelar-Oracle-Adapter
 
 **This is an adapter for [Modelar](http://modelar.hyurl.com) to connect**
-**SQLite database.**
+**Oracle database.**
 
 ## Install
 
 ```sh
-npm install modelar-sqlite-adpater
+npm install modelar-oracle-adpater
 ```
 
 ## How To Use
