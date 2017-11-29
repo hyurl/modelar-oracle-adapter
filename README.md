@@ -21,7 +21,7 @@ DB.setAdapter("oracle", OracleAdapter).init({
     host: "127.0.0.1",
     port: 1521,
     user: "SYSTEM",
-    password: "161301"
+    password: "******"
 });
 ```
 
