@@ -1,6 +1,6 @@
 {
     "name": "modelar-oracle-adapter",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "An adapter for Modelar to connect Oracle database.",
     "main": "index.js",
     "scripts": {
