@@ -41,12 +41,6 @@ class OracleAdapter extends Adapter {
     }
 
     query(db, sql, bindings) {
-        if (this.connection === null) {
-            return this.connect(db).then(db => {
-                return this.query(db, sql, bindings);
-            });
-        }
-
         var params = {},
             returnId = false;
 
@@ -92,11 +86,16 @@ class OracleAdapter extends Adapter {
         });
         if (typeof callback == "function") {
             return promise.then(db => {
-                return callback.call(db, db);
+                let res = callback.call(db, db);
+                if (res.then instanceof Function) {
+                    return res.then(() => db);
+                } else {
+                    return db;
+                }
             }).then(db => {
-                return this.commit();
+                return this.commit(db);
             }).catch(err => {
-                return this.rollback().then(db => {
+                return this.rollback(db).then(db => {
                     throw err;
                 });
             });
@@ -131,7 +130,7 @@ class OracleAdapter extends Adapter {
             this.connection.close();
     }
 
-    closeAll() {
+    static close() {
         for (let i in Pools) {
             Pools[i].close();
             delete Pools[i];
@@ -157,10 +156,10 @@ class OracleAdapter extends Adapter {
                 table._autoIncrement = field.autoIncrement;
             }
             if (field.length instanceof Array) {
-                field.length = field.length.join(",");
-            }
-            if (field.length)
+                field.type += "(" + field.length.join(",") + ")";
+            } else if (field.length) {
                 field.type += "(" + field.length + ")";
+            }
 
             let column = table.backquote(field.name) + " " + field.type;
 
@@ -197,9 +196,7 @@ class OracleAdapter extends Adapter {
         if (foreigns.length)
             sql += ",\n\t" + foreigns.join(",\n\t");
 
-        sql += "\n)";
-
-        return sql;
+        return sql += "\n)";
     }
 
     create(table) {
@@ -270,9 +267,8 @@ class OracleAdapter extends Adapter {
             }
         }
 
-        sql += (query._union ? " union " + query._union : "");
-        return sql;
+        return sql += (query._union ? " union " + query._union : "");
     }
 }
 
-module.exports = new OracleAdapter;
+module.exports = OracleAdapter;
