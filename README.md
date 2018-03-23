@@ -13,7 +13,7 @@ npm install modelar-oracle-adapter
 
 ```javascript
 const { DB } = require("modelar");
-const OracleAdapter = require("modelar-oracle-adapter");
+const { OracleAdapter } = require("modelar-oracle-adapter");
 
 DB.setAdapter("oracle", OracleAdapter).init({
     type: "oracle",
@@ -36,5 +36,6 @@ that guarantees successful installation.
 Oracle database transfers identifiers to UPPER-CASE by default, but with this 
 adapter, they will keep the form of which they're defined.
 
-If you want to use full features of modelar with this adapter, you must set an
-`id` field for every table as its primary key.
+Be aware, the `db.insertId` will not be available unless it's a model instance
+or you manually add `returning <column_name> to :id` at the end of your SQL 
+statement.

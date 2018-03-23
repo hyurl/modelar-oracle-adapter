@@ -1,5 +1,5 @@
 const { DB, Table, User } = require("modelar");
-const OracleAdapter = require("./");
+const { OracleAdapter } = require("./");
 
 DB.setAdapter("oracle", OracleAdapter).init({
     type: "oracle",

@@ -1,6 +1,17 @@
 const oracledb = require("oracledb");
-const { Adapter } = require("modelar");
+const { Adapter, Model } = require("modelar");
+const { trim } = require("string-trimmer");
 const Pools = {};
+
+function getId(target, sql) {
+    let matches = sql.match(/\sreturning\s(.+?)\sinto\s:id/i), id;
+    if (matches) {
+        id = trim(matches[1], '"');
+    } else if (target instanceof Model) {
+        id = target._primary;
+    }
+    return id;
+}
 
 class OracleAdapter extends Adapter {
     constructor() {
@@ -41,8 +52,7 @@ class OracleAdapter extends Adapter {
     }
 
     query(db, sql, bindings) {
-        var params = {},
-            returnId = false;
+        let params = {}, returnId;
 
         // Replace ? to :{n} of the SQL.
         for (let i in bindings) {
@@ -50,10 +60,12 @@ class OracleAdapter extends Adapter {
             params["param" + i] = bindings[i];
         }
         // Return the record when inserting.
-        if (db._command == "insert" && sql.search(/returning\s/) <= 0) {
-            sql += ` returning "id" into :id`;
-            params["id"] = { type: oracledb.NUMBER, dir: oracledb.BIND_OUT };
-            returnId = true;
+        if (db._command == "insert") {
+            returnId = getId(db, sql);
+            if (returnId) {
+                sql += ` returning "${returnId}" into :id`;
+                params["id"] = { type: oracledb.NUMBER, dir: oracledb.BIND_OUT };
+            }
         }
 
         return this.connection.execute(sql, params, {
@@ -80,10 +92,9 @@ class OracleAdapter extends Adapter {
     }
 
     transaction(db, callback = null) {
-        var promise = new Promise((resolve, reject) => {
-            this.inTransaction = true;
-            resolve(db)
-        });
+        this.inTransaction = true;
+        let promise = Promise.resolve(db);
+
         if (typeof callback == "function") {
             return promise.then(db => {
                 let res = callback.call(db, db);
@@ -95,7 +106,7 @@ class OracleAdapter extends Adapter {
             }).then(db => {
                 return this.commit(db);
             }).catch(err => {
-                return this.rollback(db).then(db => {
+                return this.rollback(db).then(() => {
                     throw err;
                 });
             });
@@ -270,5 +281,6 @@ class OracleAdapter extends Adapter {
         return sql += (query._union ? " union " + query._union : "");
     }
 }
+OracleAdapter.OracleAdapter = OracleAdapter;
 
 module.exports = OracleAdapter;

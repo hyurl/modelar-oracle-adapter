@@ -1,6 +1,6 @@
 {
     "name": "modelar-oracle-adapter",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "An adapter for Modelar to connect Oracle database.",
     "main": "index.js",
     "scripts": {
@@ -14,7 +14,7 @@
     "author": {
         "name": "Ayon Lee",
         "email": "i@hyurl.com",
-        "url": "hyurl.com"
+        "url": "http://hyurl.com"
     },
     "repository": {
         "type": "git",
@@ -23,6 +23,7 @@
     "license": "MIT",
     "dependencies": {
         "modelar": "^2.1.0",
-        "oracledb": "^1.13.1"
+        "oracledb": "^1.13.1",
+        "string-trimmer": "^1.0.1"
     }
 }
