@@ -1,12 +1,19 @@
 # Modelar-Oracle-Adapter
 
-**This is an adapter for [Modelar](http://modelar.hyurl.com) to connect**
-**Oracle database.**
+**This is an adapter for [Modelar](https://github.com/hyurl/modelar) to** 
+**connect Oracle database.**
 
 ## Install
 
 ```sh
-npm install modelar-oracle-adapter
+npm install modelar-oracle-adapter --save
+```
+
+The above command will install the latest version for Modelar 3.0+, if you're 
+using Modelar 2.X, use the following command instead:
+
+```sh
+npm install modelar-oracle-adapter --tag modelar2 --save
 ```
 
 ## How To Use

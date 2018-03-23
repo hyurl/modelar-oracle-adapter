@@ -1,1 +1,4 @@
 .vscode/
+.gitignore
+modelar.db
+node_modules/

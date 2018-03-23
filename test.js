@@ -19,6 +19,8 @@ DB.on("query", (db) => {
     try {
         db = new DB();
 
+        await new Table("users").use(db).drop();
+
         console.log("Create a new table `users`:\n");
         var table = new Table("users");
         table.addColumn("id").primary().autoIncrement(10001);
