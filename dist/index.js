@@ -1,19 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const string_trimmer_1 = require("string-trimmer");
 const modelar_1 = require("modelar");
 const oracledb_1 = require("oracledb");
-function getId(target, sql) {
-    let matches = sql.match(/\sreturning\s(.+?)\sinto\s:id/i), id;
-    if (matches) {
-        id = string_trimmer_1.trim(matches[1], '"');
-    }
-    else if (target instanceof modelar_1.Model) {
-        id = target.primary;
-        console.log(sql, id);
-    }
-    return id;
-}
 class OracleAdapter extends modelar_1.Adapter {
     constructor() {
         super(...arguments);

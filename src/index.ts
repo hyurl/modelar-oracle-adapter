@@ -9,20 +9,6 @@ import {
     BIND_OUT
 } from "oracledb";
 
-function getId(target: any, sql: string): string {
-    let matches = sql.match(/\sreturning\s(.+?)\sinto\s:id/i),
-        id: string;
-
-    if (matches) {
-        id = trim(matches[1], '"');
-    } else if (target instanceof Model) {
-        id = target.primary;
-        console.log(sql, id);
-    }
-
-    return id;
-}
-
 export class OracleAdapter extends Adapter {
     backquote = "\"";
     connection: IConnection;
