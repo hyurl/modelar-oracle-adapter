@@ -10,6 +10,7 @@ function getId(target, sql) {
     }
     else if (target instanceof modelar_1.Model) {
         id = target.primary;
+        console.log(sql, id);
     }
     return id;
 }
@@ -22,10 +23,16 @@ class OracleAdapter extends modelar_1.Adapter {
     connect(db) {
         return new Promise((resolve, reject) => {
             if (OracleAdapter.Pools[db.dsn] === undefined) {
-                let i = db.dsn.indexOf("@"), str = db.dsn.substring(i + 1), config = Object.assign({}, db.config);
+                let config = Object.assign({}, db.config);
                 config.poolMax = db.config.max;
-                config.poolTimeout = db.config.timeout / 1000;
-                config.connectString = str;
+                config.poolTimeout = Math.round(db.config.timeout / 1000);
+                if (!db.config["connectionString"]) {
+                    config.connectString = db.config["connectionString"];
+                }
+                else {
+                    let i = db.dsn.indexOf("@"), str = db.dsn.substring(i + 1);
+                    config.connectString = str;
+                }
                 oracledb_1.createPool(config, (err, pool) => {
                     if (err) {
                         reject(err);
@@ -53,10 +60,15 @@ class OracleAdapter extends modelar_1.Adapter {
             params["param" + i] = bindings[i];
         }
         if (db.command == "insert") {
-            returnId = getId(db, sql);
-            if (returnId) {
-                sql += ` returning "${returnId}" into :id`;
+            let matches = sql.match(/\sreturning\s(.+?)\sinto\s:id/i);
+            if (matches) {
                 params["id"] = { type: oracledb_1.NUMBER, dir: oracledb_1.BIND_OUT };
+                returnId = true;
+            }
+            else if (db instanceof modelar_1.Model) {
+                sql += ` returning "${db.primary}" into :id`;
+                params["id"] = { type: oracledb_1.NUMBER, dir: oracledb_1.BIND_OUT };
+                returnId = true;
             }
         }
         return this.connection.execute(sql, params, {

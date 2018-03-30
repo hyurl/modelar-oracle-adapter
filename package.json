@@ -24,8 +24,8 @@
     "license": "MIT",
     "dependencies": {
         "@types/oracledb": "^1.11.34",
-        "modelar": "^3.0.0",
-        "oracledb": "^1.13.1",
+        "modelar": "^3.0.1",
+        "oracledb": "^2.1.2",
         "string-trimmer": "^1.0.1"
     }
 }

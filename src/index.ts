@@ -17,6 +17,7 @@ function getId(target: any, sql: string): string {
         id = trim(matches[1], '"');
     } else if (target instanceof Model) {
         id = target.primary;
+        console.log(sql, id);
     }
 
     return id;
@@ -32,13 +33,19 @@ export class OracleAdapter extends Adapter {
     connect(db: DB): Promise<DB> {
         return new Promise((resolve: (pool: IConnectionPool) => void, reject) => {
             if (OracleAdapter.Pools[db.dsn] === undefined) {
-                let i = db.dsn.indexOf("@"),
-                    str = db.dsn.substring(i + 1),
-                    config: IPoolAttributes = <any>Object.assign({}, db.config);
+                let config: IPoolAttributes = <any>Object.assign({}, db.config);
 
                 config.poolMax = db.config.max;
-                config.poolTimeout = db.config.timeout / 1000;
-                config.connectString = str;
+                config.poolTimeout = Math.round(db.config.timeout / 1000);
+
+                if (!db.config["connectionString"]) {
+                    config.connectString = db.config["connectionString"]
+                } else {
+                    let i = db.dsn.indexOf("@"),
+                        str = db.dsn.substring(i + 1);
+
+                    config.connectString = str;
+                }
 
                 createPool(config, (err, pool) => {
                     if (err) {
@@ -61,7 +68,7 @@ export class OracleAdapter extends Adapter {
 
     query(db: DB, sql: string, bindings?: any[]): Promise<DB> {
         let params: { [param: string]: any } = {},
-            returnId: string;
+            returnId: boolean;
 
         // Replace ? to :{n} of the SQL.
         for (let i in bindings) {
@@ -71,10 +78,15 @@ export class OracleAdapter extends Adapter {
 
         // Return the record when inserting.
         if (db.command == "insert") {
-            returnId = getId(db, sql);
-            if (returnId) {
-                sql += ` returning "${returnId}" into :id`;
+            let matches = sql.match(/\sreturning\s(.+?)\sinto\s:id/i);
+
+            if (matches) {
                 params["id"] = { type: NUMBER, dir: BIND_OUT };
+                returnId = true;
+            } else if (db instanceof Model) {
+                sql += ` returning "${db.primary}" into :id`;
+                params["id"] = { type: NUMBER, dir: BIND_OUT };
+                returnId = true;
             }
         }
 
