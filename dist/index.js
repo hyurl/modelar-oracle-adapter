@@ -237,13 +237,13 @@ class OracleAdapter extends modelar_1.Adapter {
         let selects = query["_selects"], distinct = query["_distinct"], join = query["_join"], where = query["_where"], orderBy = query["_orderBy"], groupBy = query["_groupBy"], having = query["_having"], union = query["_union"], limit = query["_limit"], isCount = (/count\(distinct\s\S+\)/i).test(selects), paginated = limit instanceof Array;
         distinct = distinct && !isCount ? "distinct " : "";
         where = where ? ` where ${where}` : "";
-        orderBy = orderBy ? `order by ${orderBy}` : "";
+        orderBy = orderBy ? ` order by ${orderBy}` : "";
         groupBy = groupBy ? ` group by ${groupBy}` : "";
         having = having ? ` having ${having}` : "";
         union = union ? ` union ${union}` : "";
-        let sql = `select ${distinct}${selects} from ` +
-            (!join ? query.backquote(query.table) : "") + join + where +
-            orderBy + groupBy + having;
+        let sql = `select ${distinct}${selects} from `
+            + (!join ? query.backquote(query.table) : "")
+            + join + where + orderBy + groupBy + having;
         if (limit) {
             if (paginated) {
                 sql = `select * from (select tmp.*, rownum rn from (${sql}) tmp where rownum <= ${limit[0] + limit[1]}) where rn > ${limit[0]}`;

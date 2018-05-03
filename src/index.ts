@@ -297,14 +297,14 @@ export class OracleAdapter extends Adapter {
 
         distinct = distinct && !isCount ? "distinct " : "";
         where = where ? ` where ${where}` : "";
-        orderBy = orderBy ? `order by ${orderBy}` : "";
+        orderBy = orderBy ? ` order by ${orderBy}` : "";
         groupBy = groupBy ? ` group by ${groupBy}` : "";
         having = having ? ` having ${having}` : "";
         union = union ? ` union ${union}` : "";
 
-        let sql = `select ${distinct}${selects} from ` +
-            (!join ? query.backquote(query.table) : "") + join + where +
-            orderBy + groupBy + having;
+        let sql = `select ${distinct}${selects} from `
+            + (!join ? query.backquote(query.table) : "")
+            + join + where + orderBy + groupBy + having;
 
         if (limit) {
             if (paginated) {
