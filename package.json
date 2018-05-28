@@ -1,6 +1,6 @@
 {
     "name": "modelar-oracle-adapter",
-    "version": "3.0.2",
+    "version": "3.0.3",
     "description": "An adapter for Modelar to connect Oracle database.",
     "main": "dist/index.js",
     "types": "src/index.ts",
@@ -23,9 +23,14 @@
     },
     "license": "MIT",
     "dependencies": {
+        "@types/lodash": "^4.14.109",
         "@types/oracledb": "^1.11.34",
+        "lodash": "^4.17.10",
         "modelar": "^3.0.1",
         "oracledb": "^2.1.2",
-        "string-trimmer": "^1.0.1"
+        "tslib": "^1.9.1"
+    },
+    "engines": {
+        "node": ">=4.0"
     }
 }

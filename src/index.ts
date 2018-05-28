@@ -1,4 +1,3 @@
-import { trim } from "string-trimmer";
 import { Adapter, DB, Table, Query, Model } from "modelar";
 import {
     createPool,
@@ -8,6 +7,7 @@ import {
     NUMBER,
     BIND_OUT
 } from "oracledb";
+import assign = require("lodash/assign")
 
 export class OracleAdapter extends Adapter {
     backquote = "\"";
@@ -19,7 +19,7 @@ export class OracleAdapter extends Adapter {
     connect(db: DB): Promise<DB> {
         return new Promise((resolve: (pool: IConnectionPool) => void, reject) => {
             if (OracleAdapter.Pools[db.dsn] === undefined) {
-                let config: IPoolAttributes = <any>Object.assign({}, db.config);
+                let config: IPoolAttributes = <any>assign({}, db.config);
 
                 config.poolMax = db.config.max;
                 config.poolTimeout = Math.round(db.config.timeout / 1000);
@@ -172,7 +172,7 @@ export class OracleAdapter extends Adapter {
             let field = table.schema[key];
 
             if (field.primary && field.autoIncrement) {
-                if (!numbers.includes(field.type.toLowerCase())) {
+                if (numbers.indexOf(field.type.toLowerCase()) === -1) {
                     field.type = "int";
                 }
 
@@ -180,30 +180,31 @@ export class OracleAdapter extends Adapter {
                 table["_autoIncrement"] = field.autoIncrement;
             }
 
+            let type = field.type;
             if (field.length instanceof Array) {
-                field.type += "(" + field.length.join(",") + ")";
+                type += "(" + field.length.join(",") + ")";
             } else if (field.length) {
-                field.type += "(" + field.length + ")";
+                type += "(" + field.length + ")";
             }
 
-            let column = table.backquote(field.name) + " " + field.type;
+            let column = table.backquote(field.name) + " " + type;
 
             if (field.primary)
                 primary = field.name;
+
+            if (field.unique)
+                column += " unique";
+
+            if (field.unsigned)
+                column += " unsigned";
+
+            if (field.notNull)
+                column += " not null";
 
             if (field.default === null)
                 column += " default null";
             else if (field.default !== undefined)
                 column += " default " + table.quote(field.default);
-
-            if (field.notNull)
-                column += " not null";
-
-            if (field.unsigned)
-                column += " unsigned";
-
-            if (field.unique)
-                column += " unique";
 
             if (field.comment)
                 column += " comment " + table.quote(field.comment);

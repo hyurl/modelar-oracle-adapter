@@ -1,27 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const modelar_1 = require("modelar");
-const oracledb_1 = require("oracledb");
-class OracleAdapter extends modelar_1.Adapter {
-    constructor() {
-        super(...arguments);
-        this.backquote = "\"";
-        this.inTransaction = false;
+var tslib_1 = require("tslib");
+var modelar_1 = require("modelar");
+var oracledb_1 = require("oracledb");
+var assign = require("lodash/assign");
+var OracleAdapter = (function (_super) {
+    tslib_1.__extends(OracleAdapter, _super);
+    function OracleAdapter() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.backquote = "\"";
+        _this.inTransaction = false;
+        return _this;
     }
-    connect(db) {
-        return new Promise((resolve, reject) => {
+    OracleAdapter.prototype.connect = function (db) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
             if (OracleAdapter.Pools[db.dsn] === undefined) {
-                let config = Object.assign({}, db.config);
+                var config = assign({}, db.config);
                 config.poolMax = db.config.max;
                 config.poolTimeout = Math.round(db.config.timeout / 1000);
                 if (!db.config["connectionString"]) {
                     config.connectString = db.config["connectionString"];
                 }
                 else {
-                    let i = db.dsn.indexOf("@"), str = db.dsn.substring(i + 1);
+                    var i = db.dsn.indexOf("@"), str = db.dsn.substring(i + 1);
                     config.connectString = str;
                 }
-                oracledb_1.createPool(config, (err, pool) => {
+                oracledb_1.createPool(config, function (err, pool) {
                     if (err) {
                         reject(err);
                     }
@@ -34,46 +39,47 @@ class OracleAdapter extends modelar_1.Adapter {
             else {
                 resolve(OracleAdapter.Pools[db.dsn]);
             }
-        }).then(pool => {
+        }).then(function (pool) {
             return pool.getConnection();
-        }).then((connection) => {
-            this.connection = connection;
+        }).then(function (connection) {
+            _this.connection = connection;
             return db;
         });
-    }
-    query(db, sql, bindings) {
-        let params = {}, returnId;
-        for (let i in bindings) {
+    };
+    OracleAdapter.prototype.query = function (db, sql, bindings) {
+        var params = {}, returnId;
+        for (var i in bindings) {
             sql = sql.replace("?", ":param" + i);
             params["param" + i] = bindings[i];
         }
         if (db.command == "insert") {
-            let matches = sql.match(/\sreturning\s(.+?)\sinto\s:id/i);
+            var matches = sql.match(/\sreturning\s(.+?)\sinto\s:id/i);
             if (matches) {
                 params["id"] = { type: oracledb_1.NUMBER, dir: oracledb_1.BIND_OUT };
                 returnId = true;
             }
             else if (db instanceof modelar_1.Model) {
-                sql += ` returning "${db.primary}" into :id`;
+                sql += " returning \"" + db.primary + "\" into :id";
                 params["id"] = { type: oracledb_1.NUMBER, dir: oracledb_1.BIND_OUT };
                 returnId = true;
             }
         }
         return this.connection.execute(sql, params, {
             autoCommit: !this.inTransaction
-        }).then(res => {
+        }).then(function (res) {
             if (returnId) {
-                let outBinds = res.outBinds;
+                var outBinds = res.outBinds;
                 db.insertId = outBinds.id[0];
             }
             if (res.rowsAffected) {
                 db.affectedRows = res.rowsAffected;
             }
             if (res.rows && res.rows.length) {
-                let data = [];
-                for (let row of res.rows) {
-                    let _data = {};
-                    for (let i in res.metaData) {
+                var data = [];
+                for (var _i = 0, _a = res.rows; _i < _a.length; _i++) {
+                    var row = _a[_i];
+                    var _data = {};
+                    for (var i in res.metaData) {
                         _data[res.metaData[i].name] = row[i];
                     }
                     data.push(_data);
@@ -82,23 +88,24 @@ class OracleAdapter extends modelar_1.Adapter {
             }
             return db;
         });
-    }
-    transaction(db, cb) {
+    };
+    OracleAdapter.prototype.transaction = function (db, cb) {
+        var _this = this;
         this.inTransaction = true;
-        let promise = Promise.resolve(db);
+        var promise = Promise.resolve(db);
         if (typeof cb == "function") {
-            return promise.then(db => {
-                let res = cb.call(db, db);
+            return promise.then(function (db) {
+                var res = cb.call(db, db);
                 if (res.then instanceof Function) {
-                    return res.then(() => db);
+                    return res.then(function () { return db; });
                 }
                 else {
                     return db;
                 }
-            }).then(db => {
-                return this.commit(db);
-            }).catch(err => {
-                return this.rollback(db).then(() => {
+            }).then(function (db) {
+                return _this.commit(db);
+            }).catch(function (err) {
+                return _this.rollback(db).then(function () {
                     throw err;
                 });
             });
@@ -106,74 +113,77 @@ class OracleAdapter extends modelar_1.Adapter {
         else {
             return promise;
         }
-    }
-    commit(db) {
-        return this.connection.commit().then(() => {
-            this.inTransaction = false;
+    };
+    OracleAdapter.prototype.commit = function (db) {
+        var _this = this;
+        return this.connection.commit().then(function () {
+            _this.inTransaction = false;
             return db;
         });
-    }
-    rollback(db) {
-        return this.connection.rollback().then(() => {
-            this.inTransaction = false;
+    };
+    OracleAdapter.prototype.rollback = function (db) {
+        var _this = this;
+        return this.connection.rollback().then(function () {
+            _this.inTransaction = false;
             return db;
         });
-    }
-    release() {
+    };
+    OracleAdapter.prototype.release = function () {
         if (this.connection) {
             this.connection.release();
             this.connection = null;
         }
-    }
-    close() {
+    };
+    OracleAdapter.prototype.close = function () {
         if (this.connection) {
             this.connection.close();
             this.connection = null;
         }
-    }
-    static close() {
-        for (let i in OracleAdapter.Pools) {
+    };
+    OracleAdapter.close = function () {
+        for (var i in OracleAdapter.Pools) {
             OracleAdapter.Pools[i].close();
             delete OracleAdapter.Pools[i];
         }
-    }
-    getDDL(table) {
-        const numbers = ["int", "integer", "number"];
-        let columns = [];
-        let foreigns = [];
-        let primary;
-        for (let key in table.schema) {
-            let field = table.schema[key];
+    };
+    OracleAdapter.prototype.getDDL = function (table) {
+        var numbers = ["int", "integer", "number"];
+        var columns = [];
+        var foreigns = [];
+        var primary;
+        for (var key in table.schema) {
+            var field = table.schema[key];
             if (field.primary && field.autoIncrement) {
-                if (!numbers.includes(field.type.toLowerCase())) {
+                if (numbers.indexOf(field.type.toLowerCase()) === -1) {
                     field.type = "int";
                 }
                 table["_primary"] = field.name;
                 table["_autoIncrement"] = field.autoIncrement;
             }
+            var type = field.type;
             if (field.length instanceof Array) {
-                field.type += "(" + field.length.join(",") + ")";
+                type += "(" + field.length.join(",") + ")";
             }
             else if (field.length) {
-                field.type += "(" + field.length + ")";
+                type += "(" + field.length + ")";
             }
-            let column = table.backquote(field.name) + " " + field.type;
+            var column = table.backquote(field.name) + " " + type;
             if (field.primary)
                 primary = field.name;
+            if (field.unique)
+                column += " unique";
+            if (field.unsigned)
+                column += " unsigned";
+            if (field.notNull)
+                column += " not null";
             if (field.default === null)
                 column += " default null";
             else if (field.default !== undefined)
                 column += " default " + table.quote(field.default);
-            if (field.notNull)
-                column += " not null";
-            if (field.unsigned)
-                column += " unsigned";
-            if (field.unique)
-                column += " unique";
             if (field.comment)
                 column += " comment " + table.quote(field.comment);
             if (field.foreignKey.table) {
-                let foreign = `foreign key (${table.backquote(field.name)})` +
+                var foreign = "foreign key (" + table.backquote(field.name) + ")" +
                     " references " + table.backquote(field.foreignKey.table) +
                     " (" + table.backquote(field.foreignKey.field) + ")" +
                     " on delete " + field.foreignKey.onDelete;
@@ -182,36 +192,36 @@ class OracleAdapter extends modelar_1.Adapter {
             ;
             columns.push(column);
         }
-        let sql = "create table " + table.backquote(table.name) +
+        var sql = "create table " + table.backquote(table.name) +
             " (\n\t" + columns.join(",\n\t");
         if (primary)
             sql += ",\n\tprimary key(" + table.backquote(primary) + ")";
         if (foreigns.length)
             sql += ",\n\t" + foreigns.join(",\n\t");
         return sql += "\n)";
-    }
-    create(table) {
-        let ddl = table.getDDL();
-        let increment = table["_autoIncrement"];
-        return table.query(ddl).then(table => {
+    };
+    OracleAdapter.prototype.create = function (table) {
+        var ddl = table.getDDL();
+        var increment = table["_autoIncrement"];
+        return table.query(ddl).then(function (table) {
             if (increment) {
-                let primary = table["_primary"], seq = `${table.name}_${primary}_seq`, delSeq = "begin\n" +
-                    `\texecute immediate 'drop sequence "${seq}"';\n` +
-                    `exception\n` +
-                    `\twhen others then\n` +
-                    `\t\tif sqlcode != -0942 then\n` +
-                    `\t\t\tdbms_output.put_line(sqlcode||'---'||sqlerrm);\n` +
-                    `\t\tend if;\n` +
-                    `end;`, createSeq = `create sequence "${seq}" increment by ${increment[1]} start with ${increment[0]}`, createTrigger = `create or replace trigger "${table.name}_trigger" before insert on "${table.name}" for each row\n` +
-                    `begin\n` +
-                    `\tselect "${seq}".nextval into :new."${primary}" from dual;\n` +
-                    `end;`;
-                return table.query(delSeq).then(table => {
-                    return table.query(createSeq);
-                }).then(table => {
-                    return table.query(createTrigger);
-                }).then(table => {
-                    table.sql = `${ddl};\n${delSeq}\n/\n${createSeq};\n${createTrigger}`;
+                var primary = table["_primary"], seq = table.name + "_" + primary + "_seq", delSeq_1 = "begin\n" +
+                    ("\texecute immediate 'drop sequence \"" + seq + "\"';\n") +
+                    "exception\n" +
+                    "\twhen others then\n" +
+                    "\t\tif sqlcode != -0942 then\n" +
+                    "\t\t\tdbms_output.put_line(sqlcode||'---'||sqlerrm);\n" +
+                    "\t\tend if;\n" +
+                    "end;", createSeq_1 = "create sequence \"" + seq + "\" increment by " + increment[1] + " start with " + increment[0], createTrigger_1 = "create or replace trigger \"" + table.name + "_trigger\" before insert on \"" + table.name + "\" for each row\n" +
+                    "begin\n" +
+                    ("\tselect \"" + seq + "\".nextval into :new.\"" + primary + "\" from dual;\n") +
+                    "end;";
+                return table.query(delSeq_1).then(function (table) {
+                    return table.query(createSeq_1);
+                }).then(function (table) {
+                    return table.query(createTrigger_1);
+                }).then(function (table) {
+                    table.sql = ddl + ";\n" + delSeq_1 + "\n/\n" + createSeq_1 + ";\n" + createTrigger_1;
                     return table;
                 });
             }
@@ -219,12 +229,12 @@ class OracleAdapter extends modelar_1.Adapter {
                 return table;
             }
         });
-    }
-    random(query) {
+    };
+    OracleAdapter.prototype.random = function (query) {
         query["_orderBy"] = "dbms_random.value()";
         return query;
-    }
-    limit(query, length, offset) {
+    };
+    OracleAdapter.prototype.limit = function (query, length, offset) {
         if (!offset) {
             query["_limit"] = length;
         }
@@ -232,29 +242,30 @@ class OracleAdapter extends modelar_1.Adapter {
             query["_limit"] = [offset, length];
         }
         return query;
-    }
-    getSelectSQL(query) {
-        let selects = query["_selects"], distinct = query["_distinct"], join = query["_join"], where = query["_where"], orderBy = query["_orderBy"], groupBy = query["_groupBy"], having = query["_having"], union = query["_union"], limit = query["_limit"], isCount = (/count\(distinct\s\S+\)/i).test(selects), paginated = limit instanceof Array;
+    };
+    OracleAdapter.prototype.getSelectSQL = function (query) {
+        var selects = query["_selects"], distinct = query["_distinct"], join = query["_join"], where = query["_where"], orderBy = query["_orderBy"], groupBy = query["_groupBy"], having = query["_having"], union = query["_union"], limit = query["_limit"], isCount = (/count\(distinct\s\S+\)/i).test(selects), paginated = limit instanceof Array;
         distinct = distinct && !isCount ? "distinct " : "";
-        where = where ? ` where ${where}` : "";
-        orderBy = orderBy ? ` order by ${orderBy}` : "";
-        groupBy = groupBy ? ` group by ${groupBy}` : "";
-        having = having ? ` having ${having}` : "";
-        union = union ? ` union ${union}` : "";
-        let sql = `select ${distinct}${selects} from `
+        where = where ? " where " + where : "";
+        orderBy = orderBy ? " order by " + orderBy : "";
+        groupBy = groupBy ? " group by " + groupBy : "";
+        having = having ? " having " + having : "";
+        union = union ? " union " + union : "";
+        var sql = "select " + distinct + selects + " from "
             + (!join ? query.backquote(query.table) : "")
             + join + where + orderBy + groupBy + having;
         if (limit) {
             if (paginated) {
-                sql = `select * from (select tmp.*, rownum rn from (${sql}) tmp where rownum <= ${limit[0] + limit[1]}) where rn > ${limit[0]}`;
+                sql = "select * from (select tmp.*, rownum rn from (" + sql + ") tmp where rownum <= " + (limit[0] + limit[1]) + ") where rn > " + limit[0];
             }
             else {
-                sql = `select * from (${sql}) where rownum <= ${limit}`;
+                sql = "select * from (" + sql + ") where rownum <= " + limit;
             }
         }
         return sql + union;
-    }
-}
-OracleAdapter.Pools = {};
+    };
+    OracleAdapter.Pools = {};
+    return OracleAdapter;
+}(modelar_1.Adapter));
 exports.OracleAdapter = OracleAdapter;
 //# sourceMappingURL=index.js.map
