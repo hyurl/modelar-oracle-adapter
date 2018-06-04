@@ -5,7 +5,8 @@ import {
     IConnectionPool,
     IConnection,
     NUMBER,
-    BIND_OUT
+    BIND_OUT,
+    IExecuteReturn
 } from "oracledb";
 import assign = require("lodash/assign")
 
@@ -52,9 +53,10 @@ export class OracleAdapter extends Adapter {
         });
     }
 
-    query(db: DB, sql: string, bindings?: any[]): Promise<DB> {
+    async query(db: DB, sql: string, bindings?: any[]): Promise<DB> {
         let params: { [param: string]: any } = {},
-            returnId: boolean;
+            returnId = false,
+            shouldRetry = false;
 
         // Replace ? to :{n} of the SQL.
         for (let i in bindings) {
@@ -62,45 +64,68 @@ export class OracleAdapter extends Adapter {
             params["param" + i] = bindings[i];
         }
 
+        let originSql = sql; // original SQL used for retrying.
+
         // Return the record when inserting.
         if (db.command == "insert") {
-            let matches = sql.match(/\sreturning\s(.+?)\sinto\s:id/i);
+            let returnRe = /\sreturning\s(.+?)\sinto\s:id/i,
+                matches: RegExpMatchArray;
 
-            if (matches) {
+            if (returnRe.test(sql)) {
                 params["id"] = { type: NUMBER, dir: BIND_OUT };
                 returnId = true;
             } else if (db instanceof Model) {
                 sql += ` returning "${db.primary}" into :id`;
                 params["id"] = { type: NUMBER, dir: BIND_OUT };
                 returnId = true;
+            } else {
+                sql += ` returning "id" into :id`;
+                params["id"] = { type: NUMBER, dir: BIND_OUT };
+                returnId = true;
+                shouldRetry = true;
             }
         }
 
-        return this.connection.execute(sql, params, {
-            autoCommit: !this.inTransaction
-        }).then(res => {
-            if (returnId) {
-                let outBinds = <any>res.outBinds;
-                db.insertId = outBinds.id[0];
-            }
+        let res: IExecuteReturn,
+            options = { autoCommit: !this.inTransaction };
 
-            if (res.rowsAffected) {
-                db.affectedRows = res.rowsAffected;
+        try {
+            res = await this.connection.execute(sql, params, options);
+        } catch (err) {
+            if (shouldRetry) {
+                delete params["id"];
+                returnId = false;
+                res = await this.connection.execute(originSql, params, options);
+            } else {
+                throw err;
             }
+        }
 
-            if (res.rows && res.rows.length) {
-                let data = [];
-                for (let row of res.rows) {
-                    let _data: { [field: string]: any } = {};
-                    for (let i in res.metaData) {
-                        _data[res.metaData[i].name] = row[i];
-                    }
-                    data.push(_data)
+        if (returnId) {
+            let outBinds = res.outBinds;
+            db.insertId = outBinds["id"][0];
+        }
+
+        db.affectedRows = res.rowsAffected || 0;
+
+        if (res.rows && res.rows.length || db.command == "select") {
+            let data = [];
+
+            for (let row of res.rows) {
+                let _data: { [field: string]: any } = {};
+
+                for (let i in res.metaData) {
+                    _data[res.metaData[i].name] = row[i];
                 }
-                db.data = data;
+
+                delete _data["_rn"]; // delete temporary row number
+                data.push(_data);
             }
-            return db;
-        }) as Promise<DB>;
+
+            db.data = data;
+        }
+
+        return db;
     }
 
     transaction(db: DB, cb: (db: DB) => void): Promise<DB> {
@@ -209,11 +234,12 @@ export class OracleAdapter extends Adapter {
             if (field.comment)
                 column += " comment " + table.quote(field.comment);
 
-            if (field.foreignKey.table) {
-                let foreign = `foreign key (${table.backquote(field.name)})` +
-                    " references " + table.backquote(field.foreignKey.table) +
-                    " (" + table.backquote(field.foreignKey.field) + ")" +
-                    " on delete " + field.foreignKey.onDelete;
+            if (field.foreignKey && field.foreignKey.table) {
+                let foreign = "constraint " + table.backquote(field.name + "_frk")
+                    + " foreign key (" + table.backquote(field.name) + ")"
+                    + " references " + table.backquote(field.foreignKey.table)
+                    + " (" + table.backquote(field.foreignKey.field) + ")"
+                    + " on delete " + field.foreignKey.onDelete;
 
                 foreigns.push(foreign);
             };
@@ -222,13 +248,13 @@ export class OracleAdapter extends Adapter {
         }
 
         let sql = "create table " + table.backquote(table.name) +
-            " (\n\t" + columns.join(",\n\t");
+            " (\n  " + columns.join(",\n  ");
 
         if (primary)
-            sql += ",\n\tprimary key(" + table.backquote(primary) + ")";
+            sql += ",\n  primary key (" + table.backquote(primary) + ")";
 
         if (foreigns.length)
-            sql += ",\n\t" + foreigns.join(",\n\t");
+            sql += ",\n  " + foreigns.join(",\n  ");
 
         return sql += "\n)";
     }
@@ -241,19 +267,23 @@ export class OracleAdapter extends Adapter {
             if (increment) {
                 let primary: string = table["_primary"],
                     seq = `${table.name}_${primary}_seq`,
-                    delSeq = "begin\n" +
-                        `\texecute immediate 'drop sequence "${seq}"';\n` +
-                        `exception\n` +
-                        `\twhen others then\n` +
-                        `\t\tif sqlcode != -0942 then\n` +
-                        `\t\t\tdbms_output.put_line(sqlcode||'---'||sqlerrm);\n` +
-                        `\t\tend if;\n` +
-                        `end;`,
+                    delSeq = [
+                        'begin',
+                        `  execute immediate 'drop sequence "${seq}"';`,
+                        'exception',
+                        '  when others then',
+                        '    if sqlcode != -0942 then',
+                        "      dbms_output.put_line(sqlcode||'---'||sqlerrm);",
+                        '    end if;',
+                        'end;'
+                    ].join("\n"),
                     createSeq = `create sequence "${seq}" increment by ${increment[1]} start with ${increment[0]}`,
-                    createTrigger = `create or replace trigger "${table.name}_trigger" before insert on "${table.name}" for each row\n` +
-                        `begin\n` +
-                        `\tselect "${seq}".nextval into :new."${primary}" from dual;\n` +
-                        `end;`;
+                    createTrigger = [
+                        `create or replace trigger "${table.name}_trigger" before insert on "${table.name}" for each row`,
+                        'begin',
+                        `  select "${seq}".nextval into :new."${primary}" from dual;`,
+                        'end;'
+                    ].join("\n");
 
                 return table.query(delSeq).then(table => {
                     return table.query(createSeq);
@@ -266,6 +296,9 @@ export class OracleAdapter extends Adapter {
             } else {
                 return table;
             }
+        }).catch(err => {
+            console.log(table);
+            throw err;
         });
     }
 
@@ -309,7 +342,7 @@ export class OracleAdapter extends Adapter {
 
         if (limit) {
             if (paginated) {
-                sql = `select * from (select tmp.*, rownum rn from (${sql}) tmp where rownum <= ${limit[0] + limit[1]}) where rn > ${limit[0]}`;
+                sql = `select * from (select tmp.*, rownum "_rn" from (${sql}) tmp where rownum <= ${limit[0] + limit[1]}) where "_rn" > ${limit[0]}`;
             } else {
                 sql = `select * from (${sql}) where rownum <= ${limit}`;
             }
@@ -318,3 +351,5 @@ export class OracleAdapter extends Adapter {
         return sql + union;
     }
 }
+
+export default OracleAdapter;

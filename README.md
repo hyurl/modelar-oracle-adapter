@@ -3,17 +3,14 @@
 **This is an adapter for [Modelar](https://github.com/hyurl/modelar) to** 
 **connect Oracle database.**
 
+## Prerequisites
+
+- `NodeJS` version higher than 4.0.0.
+
 ## Install
 
 ```sh
 npm install modelar-oracle-adapter --save
-```
-
-The above command will install the latest version for Modelar 3.0+, if you're 
-using Modelar 2.X, use the following command instead:
-
-```sh
-npm install modelar-oracle-adapter --tag modelar2 --save
 ```
 
 ## How To Use
@@ -22,7 +19,10 @@ npm install modelar-oracle-adapter --tag modelar2 --save
 const { DB } = require("modelar");
 const { OracleAdapter } = require("modelar-oracle-adapter");
 
-DB.setAdapter("oracle", OracleAdapter).init({
+DB.setAdapter("oracle", OracleAdapter);
+
+// then using the type 'oracle' in db.config
+DB.init({
     type: "oracle",
     database: "XE",
     host: "127.0.0.1",
@@ -32,17 +32,19 @@ DB.setAdapter("oracle", OracleAdapter).init({
 });
 ```
 
-## Warning
-
-Since `node-oracledb` requires some prerequisites before installing, you must 
-prepare you machine as its
-[documentation](https://github.com/oracle/node-oracledb/blob/master/INSTALL.md)
-says. You could try to install it before installing `modelar-oracle-adapter`, 
-that guarantees successful installation.
+## A Tip
 
 Oracle database transfers identifiers to UPPER-CASE by default, but with this 
-adapter, they will keep the form of which they're defined.
+adapter, they will keep the case of which they're defined.
 
-Be aware, the `db.insertId` will not be available unless it's a model instance
-or you manually add `returning <column_name> to :id` at the end of your SQL 
-statement.
+Be aware, the `db.insertId` will only be available with this adapter in three
+cases:
+
+- the object is a `Model` instance
+- the table has a field name `id`
+- manually add `returning <column_name> to :id` at the end of SQL statements.
+
+If you have problems with installation, please prepare you machine as 
+[node-orabledb documentation](https://github.com/oracle/node-oracledb/blob/master/INSTALL.md)
+says. You could try to install `node-orabledb` before installing 
+`modelar-oracle-adapter`, that may guarantee a successful installation.
