@@ -48,3 +48,8 @@ If you have problems with installation, please prepare you machine as
 [node-orabledb documentation](https://github.com/oracle/node-oracledb/blob/master/INSTALL.md)
 says. You could try to install `node-orabledb` before installing 
 `modelar-oracle-adapter`, that may guarantee a successful installation.
+
+Although this adapter supports NodeJS 4.X, but `node-orabledb` hasn't been 
+pre-compiled for all versions of NodeJS (only tested in 6.X and 8.X), if you 
+have installation problems, as I suggested above, go to the documentation for 
+further help.
