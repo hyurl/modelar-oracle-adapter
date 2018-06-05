@@ -34,9 +34,6 @@ DB.init({
 
 ## A Tip
 
-Oracle database transfers identifiers to UPPER-CASE by default, but with this 
-adapter, they will keep the case of which they're defined.
-
 Be aware, the `db.insertId` will only be available with this adapter in three
 cases:
 
@@ -77,7 +74,8 @@ git clone https://github.com/hyurl/modelar-oracle-adapter
 cd modelar-oracle-adapter
 npm install
 vim test/config/db.js # edit the configuration to connect your database server
-npm test
+npm run prepare # will create neccesary tables, once tables are created,
+npm test # you can run test as many times as you want, even change node versions
 ```
 
 I have tested this package in NodeJS 4, 6 and 8, but not 10, the 

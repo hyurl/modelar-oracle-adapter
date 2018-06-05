@@ -6,7 +6,7 @@
   "types": "src/index.ts",
   "scripts": {
     "test": "mocha",
-    "pretest": "node test/before-test"
+    "prepare": "node test/before-test"
   },
   "keywords": [
     "modelar",
