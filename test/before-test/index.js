@@ -73,12 +73,11 @@ co(function* () {
         yield table8.save();
         yield table9.save();
         yield table10.save();
+        DB.close();
 
         console.log("#### OK ####");
     } catch (err) {
-        console.log(err);
-        console.log("#### ERROR ####");
+        DB.close();
+        throw err;
     }
-
-    db.close();
 });
