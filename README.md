@@ -53,3 +53,33 @@ Although this adapter supports NodeJS 4.X, but `node-orabledb` hasn't been
 pre-compiled for all versions of NodeJS (only tested in 6.X and 8.X), if you 
 have installation problems, as I suggested above, go to the documentation for 
 further help.
+
+## How To Test
+
+Since the Linux build version of `node-orabledb` on Travis-CI always failed 
+to be run, if you want to the this package, you need to do the following steps
+manually in your computer.
+
+### Prepare
+
+Before testing this package, you must have an Oracle Database server installed 
+in your machine, if you haven't, please visit the 
+[Downloads](http://www.oracle.com/technetwork/database/enterprise-edition/downloads/index.html)
+page for instructions, for a developer, the **Express Edition** is fine.
+
+If you're not very familiar with Oracle Database, I suggest you do some 
+research on it before doing the test and probably using it.
+
+### Test
+
+```sh
+git clone https://github.com/hyurl/modelar-oracle-adapter
+cd modelar-oracle-adapter
+npm install
+vim test/config/db.js # edit the configuration to connect your database server
+npm test
+```
+
+I have tested this package in NodeJS 4, 6 and 8, but not 10, the 
+`node-orabledb` hasn't had a pre-build for NodeJS 10 yet on the day I did the 
+test, you may want to do the test yourself.

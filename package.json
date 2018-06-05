@@ -1,41 +1,42 @@
 {
-    "name": "modelar-oracle-adapter",
-    "version": "3.0.4",
-    "description": "An adapter for Modelar to connect Oracle database.",
-    "main": "dist/index.js",
-    "types": "src/index.ts",
-    "scripts": {
-        "test": "mocha"
-    },
-    "keywords": [
-        "modelar",
-        "oracle",
-        "adapter"
-    ],
-    "author": {
-        "name": "Ayon Lee",
-        "email": "i@hyurl.com",
-        "url": "http://hyurl.com"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/hyurl/modelar-oracle-adapter.git"
-    },
-    "license": "MIT",
-    "dependencies": {
-        "@types/lodash": "^4.14.109",
-        "@types/oracledb": "^1.11.34",
-        "lodash": "^4.17.10",
-        "modelar": "^3.0.6",
-        "oracledb": "^2.2.0",
-        "tslib": "^1.9.1"
-    },
-    "engines": {
-        "node": ">=4.0"
-    },
-    "devDependencies": {
-        "@types/mocha": "^5.2.1",
-        "co": "^4.6.0",
-        "mocha": "^5.2.0"
-    }
+  "name": "modelar-oracle-adapter",
+  "version": "3.0.4",
+  "description": "An adapter for Modelar to connect Oracle database.",
+  "main": "dist/index.js",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "mocha",
+    "pretest": "node test/before-test"
+  },
+  "keywords": [
+    "modelar",
+    "oracle",
+    "adapter"
+  ],
+  "author": {
+    "name": "Ayon Lee",
+    "email": "i@hyurl.com",
+    "url": "http://hyurl.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyurl/modelar-oracle-adapter.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@types/lodash": "^4.14.109",
+    "@types/oracledb": "^1.11.34",
+    "lodash": "^4.17.10",
+    "modelar": "^3.0.6",
+    "oracledb": "^2.2.0",
+    "tslib": "^1.9.1"
+  },
+  "engines": {
+    "node": ">=4.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^5.2.1",
+    "co": "^4.6.0",
+    "mocha": "^5.2.0"
+  }
 }
