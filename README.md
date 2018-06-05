@@ -74,7 +74,7 @@ git clone https://github.com/hyurl/modelar-oracle-adapter
 cd modelar-oracle-adapter
 npm install
 vim test/config/db.js # edit the configuration to connect your database server
-npm run prepare # will create neccesary tables, once tables are created,
+npm run init # will create neccesary tables, once tables are created,
 npm test # you can run test as many times as you want, even change node versions
 ```
 
