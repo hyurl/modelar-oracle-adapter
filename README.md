@@ -57,8 +57,8 @@ further help.
 ## How To Test
 
 Since the Linux build version of `node-orabledb` on Travis-CI always failed 
-to be run, if you want to the this package, you need to do the following steps
-manually in your computer.
+to be run, if you want to test this package, you need to do the following 
+steps manually in your computer.
 
 ### Prepare
 
