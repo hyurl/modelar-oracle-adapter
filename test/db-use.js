@@ -1,6 +1,7 @@
 var assert = require("assert");
 var DB = require("modelar").DB;
 var config = require("./config/db");
+var dsn = require("./config/dsn");
 
 describe("DB.prototype.use()", function () {
     it("should use an existing DB instance and its connections as expected", function () {
@@ -16,7 +17,7 @@ describe("DB.prototype.use()", function () {
             timeout: 5000
         }));
 
-        assert.equal(db2.dsn, "oracle://travis:travis@127.0.0.1:1521/XE");
+        assert.equal(db2.dsn, dsn);
 
         assert.equal(db2.adapter, db.adapter);
     });

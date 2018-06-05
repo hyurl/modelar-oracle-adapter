@@ -1,6 +1,7 @@
 var assert = require("assert");
 var DB = require("modelar").DB;
 var config = require("./config/db");
+var dsn = require("./config/dsn");
 
 describe("new DB()", function () {
     it("should create a DB instance as expected", function () {
@@ -15,7 +16,7 @@ describe("new DB()", function () {
             timeout: 5000
         }));
 
-        assert.equal(db.dsn, "oracle://travis:travis@127.0.0.1:1521/XE");
+        assert.equal(db.dsn, dsn);
         assert.equal(db.sql, "");
         assert.deepEqual(db.bindings, []);
         assert.equal(db.insertId, 0);

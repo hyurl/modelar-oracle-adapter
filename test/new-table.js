@@ -2,6 +2,7 @@ var assert = require("assert");
 var DB = require("modelar").DB;
 var Table = require("modelar").Table;
 var config = require("./config/db");
+var dsn = require("./config/dsn");
 
 describe("new Table()", function () {
     describe("new Table(name: string)", function () {
@@ -18,7 +19,7 @@ describe("new Table()", function () {
                 timeout: 5000
             }));
 
-            assert.equal(db.dsn, "oracle://travis:travis@127.0.0.1:1521/XE");
+            assert.equal(db.dsn, dsn);
             assert.equal(table.sql, "");
             assert.deepEqual(table.bindings, []);
             assert.equal(table.insertId, 0);

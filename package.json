@@ -37,6 +37,7 @@
   "devDependencies": {
     "@types/mocha": "^5.2.1",
     "co": "^4.6.0",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "url6": "^6.0.2"
   }
 }

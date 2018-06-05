@@ -2,6 +2,7 @@ var assert = require("assert");
 var DB = require("modelar").DB;
 var Query = require("modelar").Query;
 var config = require("./config/db");
+var dsn = require("./config/dsn");
 
 describe("new Query()", function () {
     it("should create a Query instance as expected", function () {
@@ -17,7 +18,7 @@ describe("new Query()", function () {
             timeout: 5000
         }));
 
-        assert.equal(db.dsn, "oracle://travis:travis@127.0.0.1:1521/XE");
+        assert.equal(db.dsn, dsn);
         assert.equal(query.sql, "");
         assert.deepEqual(query.bindings, []);
         assert.equal(query.insertId, 0);
