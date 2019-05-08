@@ -338,7 +338,7 @@ export class OracleAdapter extends Adapter {
 
         let sql = `select ${distinct}${selects} from `
             + (!join ? query.backquote(query.table) : "")
-            + join + where + orderBy + groupBy + having;
+            + join + where + groupBy + having + union + orderBy;
 
         if (limit) {
             if (paginated) {
@@ -348,7 +348,7 @@ export class OracleAdapter extends Adapter {
             }
         }
 
-        return sql + union;
+        return sql;
     }
 }
 

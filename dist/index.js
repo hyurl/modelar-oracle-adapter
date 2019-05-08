@@ -291,7 +291,7 @@ var OracleAdapter = (function (_super) {
         union = union ? " union " + union : "";
         var sql = "select " + distinct + selects + " from "
             + (!join ? query.backquote(query.table) : "")
-            + join + where + orderBy + groupBy + having;
+            + join + where + groupBy + having + union + orderBy;
         if (limit) {
             if (paginated) {
                 sql = "select * from (select tmp.*, rownum \"_rn\" from (" + sql + ") tmp where rownum <= " + (limit[0] + limit[1]) + ") where \"_rn\" > " + limit[0];
@@ -300,7 +300,7 @@ var OracleAdapter = (function (_super) {
                 sql = "select * from (" + sql + ") where rownum <= " + limit;
             }
         }
-        return sql + union;
+        return sql;
     };
     OracleAdapter.Pools = {};
     return OracleAdapter;
